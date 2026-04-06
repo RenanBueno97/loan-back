@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: loan-control-db
+    restart: always
+    environment:
+      POSTGRES_DB: loan_control
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d loan_control"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - loan-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loan-control-api
+    restart: always
+    env_file: .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - loan-network
+
+volumes:
+  pgdata:
+
+networks:
+  loan-network:
+    driver: bridge
