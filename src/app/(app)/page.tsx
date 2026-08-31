@@ -76,6 +76,8 @@ export default function DashboardPage() {
             <CashBoxCard cents={cashCents} onSave={saveCash} />
           </div>
 
+          {cashCents !== 0 && <Reconciliation cashCents={cashCents} balance={summary.balance} />}
+
           <div className="grid gap-4 lg:grid-cols-5">
             <Card className="lg:col-span-2">
               <CardTitle>Gastos por categoria</CardTitle>
@@ -233,6 +235,51 @@ function StatCard({
         <p className="mt-0.5 truncate text-xl font-semibold tabular-nums" style={{ color }}>
           {formatBRL(value)}
         </p>
+      </div>
+    </Card>
+  );
+}
+
+function Reconciliation({
+  cashCents,
+  balance,
+}: {
+  cashCents: number;
+  balance: number;
+}) {
+  const diff = cashCents - balance; // caixinha − saldo calculado do mês
+  const matches = diff === 0;
+  const color = matches
+    ? "var(--income)"
+    : diff > 0
+      ? "var(--income)"
+      : "var(--expense)";
+  const label = matches ? "Bate certinho" : diff > 0 ? "Sobrando" : "Faltando";
+
+  return (
+    <Card className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <span className="flex items-baseline gap-1.5">
+          <span className="text-faint">Caixinha</span>
+          <span className="font-semibold tabular-nums text-ink">{formatBRL(cashCents)}</span>
+        </span>
+        <span className="text-faint">−</span>
+        <span className="flex items-baseline gap-1.5">
+          <span className="text-faint">Saldo do mês</span>
+          <span className="font-semibold tabular-nums text-ink">{formatBRL(balance)}</span>
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span
+          className="rounded-full px-2.5 py-1 text-xs font-medium"
+          style={{ color, background: `color-mix(in srgb, ${color} 12%, transparent)` }}
+        >
+          {label}
+        </span>
+        <span className="text-lg font-semibold tabular-nums" style={{ color }}>
+          {diff > 0 ? "+" : diff < 0 ? "−" : ""}
+          {formatBRL(Math.abs(diff))}
+        </span>
       </div>
     </Card>
   );
