@@ -69,14 +69,13 @@ export default function DashboardPage() {
         <Skeleton />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Receitas" value={summary.totalIncome} icon="trendUp" tone="income" />
             <StatCard label="Gastos" value={summary.totalExpense} icon="trendDown" tone="expense" />
             <StatCard label="Saldo" value={summary.balance} icon="scale" tone="balance" />
-            <CashBoxCard cents={cashCents} onSave={saveCash} />
           </div>
 
-          {cashCents !== 0 && <Reconciliation cashCents={cashCents} balance={summary.balance} />}
+          <CashBoxPanel cents={cashCents} balance={summary.balance} onSave={saveCash} />
 
           <div className="grid gap-4 lg:grid-cols-5">
             <Card className="lg:col-span-2">
@@ -240,94 +239,77 @@ function StatCard({
   );
 }
 
-function Reconciliation({
-  cashCents,
-  balance,
-}: {
-  cashCents: number;
-  balance: number;
-}) {
-  const diff = cashCents - balance; // caixinha − saldo calculado do mês
-  const matches = diff === 0;
-  const color = matches
-    ? "var(--income)"
-    : diff > 0
-      ? "var(--income)"
-      : "var(--expense)";
-  const label = matches ? "Bate certinho" : diff > 0 ? "Sobrando" : "Faltando";
-
-  return (
-    <Card className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        <span className="flex items-baseline gap-1.5">
-          <span className="text-faint">Caixinha</span>
-          <span className="font-semibold tabular-nums text-ink">{formatBRL(cashCents)}</span>
-        </span>
-        <span className="text-faint">−</span>
-        <span className="flex items-baseline gap-1.5">
-          <span className="text-faint">Saldo do mês</span>
-          <span className="font-semibold tabular-nums text-ink">{formatBRL(balance)}</span>
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span
-          className="rounded-full px-2.5 py-1 text-xs font-medium"
-          style={{ color, background: `color-mix(in srgb, ${color} 12%, transparent)` }}
-        >
-          {label}
-        </span>
-        <span className="text-lg font-semibold tabular-nums" style={{ color }}>
-          {diff > 0 ? "+" : diff < 0 ? "−" : ""}
-          {formatBRL(Math.abs(diff))}
-        </span>
-      </div>
-    </Card>
-  );
-}
-
-function CashBoxCard({
+function CashBoxPanel({
   cents,
+  balance,
   onSave,
 }: {
   cents: number;
+  balance: number;
   onSave: (value: string) => void;
 }) {
   const [value, setValue] = useState("");
-  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     setValue(cents ? String(toReais(cents)) : "");
   }, [cents]);
 
+  const filled = cents !== 0;
+  const diff = cents - balance; // caixinha − saldo calculado do mês
+  const color = diff === 0 ? "var(--income)" : diff > 0 ? "var(--income)" : "var(--expense)";
+  const label = diff === 0 ? "Bate certinho" : diff > 0 ? "Sobrando" : "Faltando";
+
   return (
-    <Card className="flex items-center gap-4">
-      <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-        style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-      >
-        <Icon name="wallet" size={20} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs uppercase tracking-wide text-faint">Caixinha</p>
-        <div className="mt-0.5 flex items-baseline gap-1">
-          <span className="text-sm text-faint">R$</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={value}
-            placeholder="0,00"
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            onFocus={() => setEditing(true)}
-            onBlur={() => {
-              setEditing(false);
-              if (value !== (cents ? String(toReais(cents)) : "")) onSave(value);
-            }}
-            className="w-full min-w-0 bg-transparent text-xl font-semibold tabular-nums text-ink outline-none placeholder:text-faint"
-          />
+    <Card className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+      <div className="flex items-center gap-4">
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+        >
+          <Icon name="wallet" size={20} />
+        </span>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-faint">Caixinha</p>
+          <p className="text-sm text-muted">Saldo em caixa no fim do mês</p>
         </div>
       </div>
-      {editing && <span className="shrink-0 text-[10px] text-faint">Enter/sair p/ salvar</span>}
+
+      <label className="flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 focus-within:border-accent">
+        <span className="text-sm text-faint">R$</span>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          placeholder="0,00"
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          onBlur={() => {
+            if (value !== (cents ? String(toReais(cents)) : "")) onSave(value);
+          }}
+          className="w-32 bg-transparent text-right text-xl font-semibold tabular-nums text-ink outline-none placeholder:text-faint"
+        />
+      </label>
+
+      {filled && (
+        <div className="flex items-center gap-x-6 gap-y-2 text-sm">
+          <span className="flex items-baseline gap-1.5">
+            <span className="text-faint">Saldo do mês</span>
+            <span className="font-semibold tabular-nums text-ink">{formatBRL(balance)}</span>
+          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full px-2.5 py-1 text-xs font-medium"
+              style={{ color, background: `color-mix(in srgb, ${color} 12%, transparent)` }}
+            >
+              {label}
+            </span>
+            <span className="text-lg font-semibold tabular-nums" style={{ color }}>
+              {diff > 0 ? "+" : diff < 0 ? "−" : ""}
+              {formatBRL(Math.abs(diff))}
+            </span>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
