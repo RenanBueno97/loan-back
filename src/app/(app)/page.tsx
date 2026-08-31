@@ -75,7 +75,7 @@ export default function DashboardPage() {
             <StatCard label="Saldo" value={summary.balance} icon="scale" tone="balance" />
           </div>
 
-          <CashBoxPanel cents={cashCents} balance={summary.balance} onSave={saveCash} />
+          <CashBoxPanel cents={cashCents} onSave={saveCash} />
 
           <div className="grid gap-4 lg:grid-cols-5">
             <Card className="lg:col-span-2">
@@ -241,11 +241,9 @@ function StatCard({
 
 function CashBoxPanel({
   cents,
-  balance,
   onSave,
 }: {
   cents: number;
-  balance: number;
   onSave: (value: string) => void;
 }) {
   const [value, setValue] = useState("");
@@ -253,11 +251,6 @@ function CashBoxPanel({
   useEffect(() => {
     setValue(cents ? String(toReais(cents)) : "");
   }, [cents]);
-
-  const filled = cents !== 0;
-  const diff = cents - balance; // caixinha − saldo calculado do mês
-  const color = diff === 0 ? "var(--income)" : diff > 0 ? "var(--income)" : "var(--expense)";
-  const label = diff === 0 ? "Bate certinho" : diff > 0 ? "Sobrando" : "Faltando";
 
   return (
     <Card className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
@@ -289,27 +282,6 @@ function CashBoxPanel({
           className="w-32 bg-transparent text-right text-xl font-semibold tabular-nums text-ink outline-none placeholder:text-faint"
         />
       </label>
-
-      {filled && (
-        <div className="flex items-center gap-x-6 gap-y-2 text-sm">
-          <span className="flex items-baseline gap-1.5">
-            <span className="text-faint">Saldo do mês</span>
-            <span className="font-semibold tabular-nums text-ink">{formatBRL(balance)}</span>
-          </span>
-          <div className="flex items-center gap-2">
-            <span
-              className="rounded-full px-2.5 py-1 text-xs font-medium"
-              style={{ color, background: `color-mix(in srgb, ${color} 12%, transparent)` }}
-            >
-              {label}
-            </span>
-            <span className="text-lg font-semibold tabular-nums" style={{ color }}>
-              {diff > 0 ? "+" : diff < 0 ? "−" : ""}
-              {formatBRL(Math.abs(diff))}
-            </span>
-          </div>
-        </div>
-      )}
     </Card>
   );
 }
