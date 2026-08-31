@@ -141,29 +141,33 @@ Layout com navegação lateral, responsivo (mobile-first), tema claro/escuro.
 
 ## 7. Roadmap de implementação
 
-**Fase 0 — Fundação**
-- [ ] Inicializar Next.js + TypeScript + Tailwind + shadcn/ui.
-- [ ] Configurar Prisma + docker-compose com Postgres; primeira migração.
-- [ ] Seed com categorias padrão (Alimentação, Transporte, Moradia, Lazer,
+**Fase 0 — Fundação** ✅
+- [x] Inicializar Next.js + TypeScript + Tailwind.
+- [x] Configurar Prisma + docker-compose com Postgres; schema inicial.
+- [x] Seed com categorias padrão (Alimentação, Transporte, Moradia, Lazer,
       Salário, etc.).
 
-**Fase 1 — Auth + Transações (MVP núcleo)**
-- [ ] Login por senha + middleware de sessão.
-- [ ] CRUD de transações + tela de listagem com filtros.
+**Fase 1 — Auth + Transações (MVP núcleo)** ✅
+- [x] Login por senha + middleware de sessão (JWT em cookie httpOnly).
+- [x] CRUD de transações + tela de listagem com filtros (mês/tipo).
 
-**Fase 2 — Categorias**
-- [ ] CRUD de categorias com cor/ícone.
+**Fase 2 — Categorias** ✅
+- [x] CRUD de categorias com cor (bloqueia exclusão com transações).
 
-**Fase 3 — Dashboard**
-- [ ] Endpoint `/api/summary` + cartões e gráficos (Recharts).
+**Fase 3 — Dashboard** ✅
+- [x] Endpoint `/api/summary` + cartões e gráficos (Recharts: pizza + barras).
 
-**Fase 4 — Orçamentos**
-- [ ] CRUD de orçamentos + barras de progresso no dashboard.
+**Fase 4 — Orçamentos** ✅
+- [x] Upsert de orçamentos por categoria/mês + barras de progresso.
 
-**Fase 5 — Polimento**
-- [ ] Tema claro/escuro, responsividade, estados vazios/erro.
-- [ ] Testes (Vitest + Playwright) e README de setup.
-- [ ] (Opcional) Exportar CSV, transações recorrentes, importação de extrato.
+**Fase 5 — Polimento** (próximos passos)
+- [ ] Tema claro/escuro por toggle (hoje segue o sistema), estados de erro.
+- [ ] Testes (Vitest + Playwright).
+- [ ] (Opcional) Exportar CSV, transações recorrentes, importação de extrato,
+      ícones nas categorias, hash da senha.
+
+> Observação: a Fase 5 (dark mode segue `prefers-color-scheme`; UI em Tailwind
+> puro em vez de shadcn/ui para evitar dependências extras).
 
 ## 8. Extras futuros (fora do MVP)
 

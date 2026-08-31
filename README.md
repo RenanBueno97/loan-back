@@ -3,8 +3,12 @@
 Aplicativo web pessoal (single-user) para controle de gastos e receitas, com
 categorias, dashboard com gráficos e orçamentos por categoria.
 
-> Status: **Fase 0 concluída** (fundação). Veja o plano completo e o roadmap
-> em [`PLAN.md`](./PLAN.md).
+> Status: **MVP completo** (Fases 0–4). Login, transações, categorias,
+> dashboard com gráficos e orçamentos implementados. Veja o roadmap em
+> [`PLAN.md`](./PLAN.md).
+>
+> Nota: a UI usa Tailwind CSS "na mão" (sem shadcn/ui) para manter o projeto
+> leve e sem dependências extras.
 
 ## Como rodar localmente
 
