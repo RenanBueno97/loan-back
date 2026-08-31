@@ -1,0 +1,59 @@
+// Schema do app de controle de gastos.
+// Valores monetários são armazenados em centavos (Int) para evitar erros
+// de ponto flutuante.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  EXPENSE // gasto
+  INCOME  // receita
+}
+
+model Category {
+  id        String          @id @default(cuid())
+  name      String
+  type      TransactionType
+  color     String // cor hex para gráficos, ex: "#22c55e"
+  icon      String? // nome de ícone opcional
+  createdAt DateTime        @default(now())
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@unique([name, type])
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  type        TransactionType
+  amountCents Int // sempre positivo; o campo "type" define se soma ou subtrai
+  description String
+  date        DateTime // data do gasto/receita
+  categoryId  String
+  category    Category        @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([date])
+  @@index([categoryId])
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  month      Int // 1-12
+  year       Int
+  limitCents Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([categoryId, month, year])
+}

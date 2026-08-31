@@ -3,8 +3,33 @@
 Aplicativo web pessoal (single-user) para controle de gastos e receitas, com
 categorias, dashboard com gráficos e orçamentos por categoria.
 
-> Status: **planejamento**. Nenhum código de aplicação ainda — veja o plano
-> completo em [`PLAN.md`](./PLAN.md).
+> Status: **Fase 0 concluída** (fundação). Veja o plano completo e o roadmap
+> em [`PLAN.md`](./PLAN.md).
+
+## Como rodar localmente
+
+Pré-requisitos: Node.js 20+, Docker (para o Postgres).
+
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Configurar variáveis de ambiente
+cp .env.example .env   # e ajuste APP_PASSWORD e AUTH_SECRET
+
+# 3. Subir o banco PostgreSQL
+docker compose up -d
+
+# 4. Criar as tabelas e semear categorias padrão
+npm run db:migrate     # cria a primeira migração
+npm run db:seed        # popula categorias padrão
+
+# 5. Rodar o app em desenvolvimento
+npm run dev            # http://localhost:3000
+```
+
+Scripts úteis: `npm run build`, `npm run db:studio` (Prisma Studio),
+`npm run db:push` (sincroniza schema sem migração).
 
 ## Visão geral rápida
 

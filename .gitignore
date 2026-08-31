@@ -21,3 +21,6 @@ playwright-report/
 .DS_Store
 *.log
 .vercel
+
+# next generated
+next-env.d.ts
