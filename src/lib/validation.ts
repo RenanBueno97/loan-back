@@ -9,6 +9,7 @@ export const transactionInput = z.object({
   description: z.string().trim().min(1, "Descrição obrigatória").max(200),
   date: z.coerce.date(),
   categoryId: z.string().min(1, "Categoria obrigatória"),
+  paid: z.coerce.boolean().optional(),
 });
 export const transactionUpdate = transactionInput.partial();
 

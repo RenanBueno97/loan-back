@@ -58,6 +58,18 @@ export default function TransactionsPage() {
     load();
   }
 
+  async function togglePaid(t: Transaction) {
+    // Atualização otimista para resposta imediata.
+    setTransactions((prev) =>
+      prev.map((x) => (x.id === t.id ? { ...x, paid: !x.paid } : x)),
+    );
+    try {
+      await apiSend(`/api/transactions/${t.id}`, "PATCH", { paid: !t.paid });
+    } catch {
+      load();
+    }
+  }
+
   const filters: { value: "" | TransactionType; label: string }[] = [
     { value: "", label: "Tudo" },
     { value: "EXPENSE", label: "Gastos" },
@@ -138,6 +150,18 @@ export default function TransactionsPage() {
                     {formatDate(t.date)} · {t.category.name}
                   </p>
                 </div>
+                <button
+                  onClick={() => togglePaid(t)}
+                  title={t.paid ? "Pago — clique para reabrir" : "Em aberto — clique para marcar como pago"}
+                  className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
+                  style={{
+                    borderColor: t.paid ? "var(--income)" : "var(--border)",
+                    color: t.paid ? "var(--income)" : "var(--muted)",
+                    background: t.paid ? "color-mix(in srgb, var(--income) 10%, transparent)" : "transparent",
+                  }}
+                >
+                  {t.paid ? "Pago" : "Em aberto"}
+                </button>
                 <span
                   className="shrink-0 text-sm font-semibold tabular-nums"
                   style={{ color: t.type === "INCOME" ? "var(--income)" : "var(--ink)" }}
@@ -202,6 +226,7 @@ function TransactionForm({
     transaction ? toDateInput(new Date(transaction.date)) : toDateInput(new Date()),
   );
   const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
+  const [paid, setPaid] = useState(transaction?.paid ?? false);
   const [installmentsOn, setInstallmentsOn] = useState(false);
   const [installments, setInstallments] = useState("10");
   const [splitTotal, setSplitTotal] = useState(false);
@@ -233,6 +258,7 @@ function TransactionForm({
       description,
       date: new Date(`${date}T12:00:00`).toISOString(),
       categoryId,
+      paid,
     };
     try {
       if (transaction) {
@@ -312,6 +338,37 @@ function TransactionForm({
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
           </Field>
         </div>
+
+        <Field label="Situação">
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { v: false, label: "Em aberto", color: "var(--muted)" },
+              { v: true, label: "Pago", color: "var(--income)" },
+            ].map((opt) => {
+              const on = paid === opt.v;
+              return (
+                <button
+                  key={String(opt.v)}
+                  type="button"
+                  onClick={() => setPaid(opt.v)}
+                  className="rounded-xl border py-2.5 text-sm font-medium transition-colors"
+                  style={{
+                    borderColor: on ? opt.color : "var(--border)",
+                    color: on ? opt.color : "var(--muted)",
+                    background: on ? `color-mix(in srgb, ${opt.color} 8%, transparent)` : "transparent",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+        {installmentsOn && (
+          <p className="-mt-1 text-xs text-faint">
+            A situação vale para todas as parcelas; depois marque cada mês como pago na lista.
+          </p>
+        )}
 
         {isNew && (
           <div className="rounded-xl border border-border bg-surface-2 p-3.5">

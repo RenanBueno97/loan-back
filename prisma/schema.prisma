@@ -39,6 +39,7 @@ model Transaction {
   date        DateTime // data do gasto/receita
   categoryId  String
   category    Category        @relation(fields: [categoryId], references: [id])
+  paid        Boolean         @default(false) // controle: pago x em aberto
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 

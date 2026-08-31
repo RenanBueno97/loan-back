@@ -17,6 +17,7 @@ export interface Transaction {
   date: string;
   categoryId: string;
   category: Category;
+  paid: boolean;
   createdAt: string;
   updatedAt: string;
   installmentGroupId: string | null;
