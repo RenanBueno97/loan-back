@@ -285,7 +285,6 @@ function TransactionForm({
           <input
             type="text"
             inputMode="decimal"
-            placeholder="0,00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className={`${inputClass} text-lg font-semibold`}
