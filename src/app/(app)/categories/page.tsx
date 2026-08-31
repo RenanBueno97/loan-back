@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/api";
 import type { Category, TransactionType } from "@/lib/types";
 import Modal from "@/components/Modal";
+import Icon from "@/components/Icon";
+import { Button, Field, inputClass } from "@/components/ui";
 
 const PALETTE = [
-  "#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#10b981",
-  "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#64748b", "#94a3b8",
+  "#c2410c", "#ea580c", "#d97706", "#65a30d", "#059669", "#0d9488",
+  "#0891b2", "#2563eb", "#7c3aed", "#c026d3", "#e11d48", "#64748b",
 ];
 
 export default function CategoriesPage() {
@@ -47,37 +49,45 @@ export default function CategoriesPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Categorias</h1>
-        <button
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
-        >
-          + Nova categoria
-        </button>
-      </div>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Categorias</h1>
+          <p className="mt-0.5 text-sm text-muted">Organize para onde o dinheiro vai.</p>
+        </div>
+        {!isEmpty && (
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+          >
+            <Icon name="plus" size={17} /> Nova
+          </Button>
+        )}
+      </header>
 
       {isEmpty && (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-          <p className="mb-4 text-sm text-slate-500">
-            Você ainda não tem categorias. Comece com um conjunto padrão.
-          </p>
-          <button
-            onClick={seedDefaults}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
-          >
-            Criar categorias padrão
-          </button>
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-surface px-6 py-14 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+            <Icon name="categories" size={24} />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-ink">Comece com um conjunto pronto</p>
+            <p className="mt-1 text-sm text-muted">
+              Criamos as categorias mais comuns para você começar rápido.
+            </p>
+          </div>
+          <Button onClick={seedDefaults}>Criar categorias padrão</Button>
         </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-500">Carregando…</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="h-64 animate-pulse rounded-2xl border border-border bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-2xl border border-border bg-surface-2" />
+        </div>
+      ) : !isEmpty ? (
+        <div className="grid gap-4 sm:grid-cols-2">
           <CategoryList
             title="Gastos"
             items={expenses}
@@ -97,7 +107,7 @@ export default function CategoriesPage() {
             onRemove={remove}
           />
         </div>
-      )}
+      ) : null}
 
       {showForm && (
         <CategoryForm
@@ -125,38 +135,37 @@ function CategoryList({
   onRemove: (c: Category) => void;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-3 text-sm font-semibold uppercase text-slate-500">
-        {title}
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">
+        {title} · {items.length}
       </h2>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-400">Nenhuma categoria.</p>
+        <p className="px-1 py-3 text-sm text-faint">Nenhuma categoria.</p>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-0.5">
           {items.map((c) => (
             <li
               key={c.id}
-              className="group flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="group flex items-center justify-between rounded-xl px-2.5 py-2 hover:bg-surface-2"
             >
-              <span className="flex items-center gap-2 text-sm">
-                <span
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: c.color }}
-                />
+              <span className="flex items-center gap-2.5 text-sm text-ink">
+                <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: c.color }} />
                 {c.name}
               </span>
-              <span className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                 <button
                   onClick={() => onEdit(c)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink"
+                  aria-label="Editar"
                 >
-                  ✎
+                  <Icon name="pencil" size={14} />
                 </button>
                 <button
                   onClick={() => onRemove(c)}
-                  className="text-slate-400 hover:text-red-600"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:bg-expense/10 hover:text-expense"
+                  aria-label="Excluir"
                 >
-                  🗑
+                  <Icon name="trash" size={14} />
                 </button>
               </span>
             </li>
@@ -188,11 +197,8 @@ function CategoryForm({
     setSaving(true);
     setError("");
     try {
-      if (category) {
-        await apiSend(`/api/categories/${category.id}`, "PATCH", { name, type, color });
-      } else {
-        await apiSend("/api/categories", "POST", { name, type, color });
-      }
+      if (category) await apiSend(`/api/categories/${category.id}`, "PATCH", { name, type, color });
+      else await apiSend("/api/categories", "POST", { name, type, color });
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar");
@@ -204,68 +210,60 @@ function CategoryForm({
   return (
     <Modal title={category ? "Editar categoria" : "Nova categoria"} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Nome</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-            className="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 outline-none focus:border-slate-900 dark:border-slate-700 dark:focus:border-slate-300"
-          />
-        </div>
+        <Field label="Nome">
+          <input value={name} onChange={(e) => setName(e.target.value)} autoFocus className={inputClass} placeholder="Ex.: Assinaturas" />
+        </Field>
 
         <div className="grid grid-cols-2 gap-2">
-          {(["EXPENSE", "INCOME"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              className={`rounded-lg border py-2 text-sm font-medium ${
-                type === t
-                  ? "border-slate-900 bg-slate-100 dark:border-slate-300 dark:bg-slate-800"
-                  : "border-slate-200 text-slate-500 dark:border-slate-700"
-              }`}
-            >
-              {t === "EXPENSE" ? "Gasto" : "Receita"}
-            </button>
-          ))}
+          {(["EXPENSE", "INCOME"] as const).map((t) => {
+            const on = type === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setType(t)}
+                className="rounded-xl border py-2.5 text-sm font-medium transition-colors"
+                style={{
+                  borderColor: on ? "var(--accent)" : "var(--border)",
+                  color: on ? "var(--accent)" : "var(--muted)",
+                  background: on ? "var(--accent-soft)" : "transparent",
+                }}
+              >
+                {t === "EXPENSE" ? "Gasto" : "Receita"}
+              </button>
+            );
+          })}
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">Cor</label>
+          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted">Cor</span>
           <div className="flex flex-wrap gap-2">
             {PALETTE.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                className={`h-7 w-7 rounded-full ${
-                  color === c ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-slate-100" : ""
-                }`}
-                style={{ backgroundColor: c }}
+                className="h-8 w-8 rounded-full transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: c,
+                  outline: color === c ? "2px solid var(--ink)" : "none",
+                  outlineOffset: 2,
+                }}
                 aria-label={c}
               />
             ))}
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-expense">{error}</p>}
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900"
-          >
+          </Button>
+          <Button type="submit" disabled={saving}>
             {saving ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

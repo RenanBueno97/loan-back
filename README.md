@@ -7,8 +7,10 @@ categorias, dashboard com gráficos e orçamentos por categoria.
 > dashboard com gráficos e orçamentos implementados. Veja o roadmap em
 > [`PLAN.md`](./PLAN.md).
 >
-> Nota: a UI usa Tailwind CSS "na mão" (sem shadcn/ui) para manter o projeto
-> leve e sem dependências extras.
+> **Design:** identidade própria (marca "Grana"), paleta verde-petróleo +
+> terracota, ícones SVG desenhados à mão, fonte Inter, tema claro/escuro e
+> componentes de UI próprios sobre Tailwind CSS v4 — sem bibliotecas de UI
+> externas.
 
 ## Como rodar localmente
 

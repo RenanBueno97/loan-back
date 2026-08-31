@@ -6,6 +6,7 @@ import { formatBRL, toCents, toReais } from "@/lib/money";
 import { currentMonthYear } from "@/lib/date";
 import type { BudgetProgress, Category } from "@/lib/types";
 import MonthPicker from "@/components/MonthPicker";
+import Icon from "@/components/Icon";
 
 interface Row {
   category: Category;
@@ -46,23 +47,22 @@ export default function BudgetsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Orçamentos</h1>
-        <MonthPicker
-          month={month}
-          year={year}
-          onChange={(m, y) => setPeriod({ month: m, year: y })}
-        />
-      </div>
-
-      <p className="text-sm text-slate-500">
-        Defina um limite de gasto por categoria para o mês selecionado.
-      </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Orçamentos</h1>
+          <p className="mt-0.5 text-sm text-muted">Defina um limite de gasto por categoria no mês.</p>
+        </div>
+        <MonthPicker month={month} year={year} onChange={(m, y) => setPeriod({ month: m, year: y })} />
+      </header>
 
       {loading ? (
-        <p className="text-sm text-slate-500">Carregando…</p>
+        <div className="space-y-2.5">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface-2" />
+          ))}
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {rows.map(({ category, budget }) => (
             <BudgetRow
               key={category.id}
@@ -101,48 +101,50 @@ function BudgetRow({
   const over = limit > 0 && spent > limit;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 text-sm font-medium">
-          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+        <span className="flex items-center gap-2.5 text-sm font-medium text-ink">
+          <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: category.color }} />
           {category.name}
         </span>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">R$</span>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={() => value && onSave(value)}
-            placeholder="0,00"
-            className="w-28 rounded-lg border border-slate-300 bg-transparent px-2 py-1 text-right text-sm outline-none focus:border-slate-900 dark:border-slate-700 dark:focus:border-slate-300"
-          />
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center rounded-xl border border-border bg-surface-2 pl-3 focus-within:border-accent">
+            <span className="text-sm text-faint">R$</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onBlur={() => value && onSave(value)}
+              placeholder="0,00"
+              className="w-24 bg-transparent px-2 py-2 text-right text-sm text-ink outline-none"
+            />
+          </div>
           {onRemove && (
             <button
               onClick={onRemove}
-              className="text-slate-400 hover:text-red-600"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-expense/10 hover:text-expense"
               aria-label="Remover orçamento"
             >
-              🗑
+              <Icon name="trash" size={15} />
             </button>
           )}
         </div>
       </div>
 
       {budget && (
-        <div className="mt-3">
-          <div className="mb-1 flex justify-between text-xs">
-            <span className="text-slate-500">Gasto: {formatBRL(spent)}</span>
-            <span className={over ? "font-medium text-red-600" : "text-slate-500"}>
-              {pct}%
+        <div className="mt-3.5">
+          <div className="mb-1.5 flex justify-between text-xs">
+            <span className="text-muted">Gasto: <span className="tabular-nums text-ink">{formatBRL(spent)}</span></span>
+            <span className={over ? "font-medium text-expense" : "text-muted"}>
+              {over ? "Estourou · " : ""}{pct}%
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div className="h-2 overflow-hidden rounded-full bg-surface-2">
             <div
-              className="h-full rounded-full"
-              style={{ width: `${pct}%`, backgroundColor: over ? "#ef4444" : category.color }}
+              className="h-full rounded-full transition-all"
+              style={{ width: `${pct}%`, backgroundColor: over ? "var(--expense)" : category.color }}
             />
           </div>
         </div>
