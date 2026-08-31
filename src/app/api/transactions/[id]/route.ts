@@ -23,11 +23,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
   const { id } = await params;
+  const scope = req.nextUrl.searchParams.get("scope");
   try {
+    // scope=group exclui todas as parcelas do mesmo parcelamento.
+    if (scope === "group") {
+      const tx = await prisma.transaction.findUnique({ where: { id } });
+      if (tx?.installmentGroupId) {
+        const { count } = await prisma.transaction.deleteMany({
+          where: { installmentGroupId: tx.installmentGroupId },
+        });
+        return NextResponse.json({ ok: true, deleted: count });
+      }
+    }
     await prisma.transaction.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, deleted: 1 });
   } catch {
     return NextResponse.json({ error: "Transação não encontrada" }, { status: 404 });
   }

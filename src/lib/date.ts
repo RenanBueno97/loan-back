@@ -17,6 +17,21 @@ export function shiftMonth(month: number, year: number, delta: number) {
   return { month: d.getMonth() + 1, year: d.getFullYear() };
 }
 
+/**
+ * Avança `count` meses a partir de uma data, preservando o dia quando possível.
+ * Se o mês de destino não tiver o dia (ex.: 31/01 + 1 mês), usa o último dia
+ * do mês de destino.
+ */
+export function addMonths(date: Date, count: number): Date {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const day = date.getDate();
+  const target = new Date(y, m + count, 1, date.getHours(), date.getMinutes());
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, lastDay));
+  return target;
+}
+
 /** Retorna "YYYY-MM-DD" a partir de um Date, em horário local. */
 export function toDateInput(date: Date): string {
   const y = date.getFullYear();

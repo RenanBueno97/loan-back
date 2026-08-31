@@ -42,8 +42,16 @@ model Transaction {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  // Parcelamento: transações que fazem parte de uma mesma despesa parcelada
+  // compartilham o installmentGroupId. installmentNo é a parcela atual (1-based)
+  // e installmentTotal o número total de parcelas.
+  installmentGroupId String?
+  installmentNo      Int?
+  installmentTotal   Int?
+
   @@index([date])
   @@index([categoryId])
+  @@index([installmentGroupId])
 }
 
 model Budget {

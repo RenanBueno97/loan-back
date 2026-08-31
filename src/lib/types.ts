@@ -19,6 +19,9 @@ export interface Transaction {
   category: Category;
   createdAt: string;
   updatedAt: string;
+  installmentGroupId: string | null;
+  installmentNo: number | null;
+  installmentTotal: number | null;
 }
 
 export interface BudgetProgress {

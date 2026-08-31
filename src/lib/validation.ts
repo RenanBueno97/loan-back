@@ -12,6 +12,15 @@ export const transactionInput = z.object({
 });
 export const transactionUpdate = transactionInput.partial();
 
+// Entrada para criação, aceitando parcelamento opcional.
+// - installments: número de parcelas (1 = transação única).
+// - splitTotal: se true, o valor informado é o TOTAL e será dividido entre as
+//   parcelas; se false/ausente, o valor é o de CADA parcela.
+export const transactionCreateInput = transactionInput.extend({
+  installments: z.coerce.number().int().min(1).max(360).optional().default(1),
+  splitTotal: z.coerce.boolean().optional().default(false),
+});
+
 export const categoryInput = z.object({
   name: z.string().trim().min(1, "Nome obrigatório").max(50),
   type: transactionType,

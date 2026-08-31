@@ -1,7 +1,10 @@
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { transactionInput } from "@/lib/validation";
+import { transactionCreateInput } from "@/lib/validation";
+import { splitCents } from "@/lib/money";
+import { addMonths } from "@/lib/date";
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
@@ -29,13 +32,40 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
-  const parsed = transactionInput.safeParse(body);
+  const parsed = transactionCreateInput.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const created = await prisma.transaction.create({
-    data: parsed.data,
+  const { installments, splitTotal, ...base } = parsed.data;
+
+  // Transação única (sem parcelamento).
+  if (installments <= 1) {
+    const created = await prisma.transaction.create({
+      data: base,
+      include: { category: true },
+    });
+    return NextResponse.json(created, { status: 201 });
+  }
+
+  // Despesa parcelada: gera uma transação por mês, ligadas pelo mesmo grupo.
+  const groupId = randomUUID();
+  const perParcel = splitTotal
+    ? splitCents(base.amountCents, installments)
+    : Array.from({ length: installments }, () => base.amountCents);
+
+  const rows = perParcel.map((amountCents, i) => ({
+    ...base,
+    amountCents,
+    date: addMonths(base.date, i),
+    installmentGroupId: groupId,
+    installmentNo: i + 1,
+    installmentTotal: installments,
+  }));
+
+  await prisma.transaction.createMany({ data: rows });
+  const first = await prisma.transaction.findFirst({
+    where: { installmentGroupId: groupId, installmentNo: 1 },
     include: { category: true },
   });
-  return NextResponse.json(created, { status: 201 });
+  return NextResponse.json(first, { status: 201 });
 }

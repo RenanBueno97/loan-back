@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/api";
-import { formatBRL, toCents, toReais } from "@/lib/money";
-import { currentMonthYear, formatDate, toDateInput } from "@/lib/date";
+import { formatBRL, splitCents, toCents, toReais } from "@/lib/money";
+import { addMonths, currentMonthYear, formatDate, monthLabel, toDateInput } from "@/lib/date";
 import type { Category, Transaction, TransactionType } from "@/lib/types";
 import Modal from "@/components/Modal";
 import MonthPicker from "@/components/MonthPicker";
@@ -34,9 +34,25 @@ export default function TransactionsPage() {
     load();
   }, [load]);
 
-  async function remove(id: string) {
+  async function remove(t: Transaction) {
+    if (t.installmentGroupId && t.installmentTotal && t.installmentTotal > 1) {
+      const all = confirm(
+        `Esta é a parcela ${t.installmentNo}/${t.installmentTotal}.\n\n` +
+          "OK = excluir TODAS as parcelas deste parcelamento.\n" +
+          "Cancelar = manter (excluir só esta, na próxima pergunta).",
+      );
+      if (all) {
+        await apiSend(`/api/transactions/${t.id}?scope=group`, "DELETE");
+        load();
+        return;
+      }
+      if (!confirm("Excluir apenas esta parcela?")) return;
+      await apiSend(`/api/transactions/${t.id}`, "DELETE");
+      load();
+      return;
+    }
     if (!confirm("Excluir esta transação?")) return;
-    await apiSend(`/api/transactions/${id}`, "DELETE");
+    await apiSend(`/api/transactions/${t.id}`, "DELETE");
     load();
   }
 
@@ -106,7 +122,14 @@ export default function TransactionsPage() {
                   <td className="whitespace-nowrap px-4 py-3 text-slate-500">
                     {formatDate(t.date)}
                   </td>
-                  <td className="px-4 py-3">{t.description}</td>
+                  <td className="px-4 py-3">
+                    {t.description}
+                    {t.installmentTotal && t.installmentTotal > 1 && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {t.installmentNo}/{t.installmentTotal}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs"
@@ -134,7 +157,7 @@ export default function TransactionsPage() {
                       ✎
                     </button>
                     <button
-                      onClick={() => remove(t.id)}
+                      onClick={() => remove(t)}
                       className="text-slate-400 hover:text-red-600"
                     >
                       🗑
@@ -182,10 +205,24 @@ function TransactionForm({
     transaction ? toDateInput(new Date(transaction.date)) : toDateInput(new Date()),
   );
   const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
+  const [installmentsOn, setInstallmentsOn] = useState(false);
+  const [installments, setInstallments] = useState("10");
+  const [splitTotal, setSplitTotal] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const isNew = !transaction;
   const options = categories.filter((c) => c.type === type);
+
+  // Prévia do parcelamento.
+  const nParc = Math.max(1, Math.min(360, parseInt(installments || "1", 10) || 1));
+  const totalCents = toCents(amount) || 0;
+  const perParcelCents = splitTotal
+    ? splitCents(totalCents, nParc)[0]
+    : totalCents;
+  const grandTotalCents = splitTotal ? totalCents : totalCents * nParc;
+  const startDate = new Date(`${date}T12:00:00`);
+  const lastDate = addMonths(startDate, nParc - 1);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -195,7 +232,7 @@ function TransactionForm({
     if (!categoryId) return setError("Selecione uma categoria.");
 
     setSaving(true);
-    const payload = {
+    const payload: Record<string, unknown> = {
       type,
       amountCents: cents,
       description,
@@ -206,6 +243,10 @@ function TransactionForm({
       if (transaction) {
         await apiSend(`/api/transactions/${transaction.id}`, "PATCH", payload);
       } else {
+        if (installmentsOn && nParc > 1) {
+          payload.installments = nParc;
+          payload.splitTotal = splitTotal;
+        }
         await apiSend("/api/transactions", "POST", payload);
       }
       onSaved();
@@ -279,7 +320,7 @@ function TransactionForm({
           </select>
         </Field>
 
-        <Field label="Data">
+        <Field label={installmentsOn ? "Data da 1ª parcela" : "Data"}>
           <input
             type="date"
             value={date}
@@ -287,6 +328,71 @@ function TransactionForm({
             className={inputClass}
           />
         </Field>
+
+        {isNew && (
+          <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={installmentsOn}
+                onChange={(e) => setInstallmentsOn(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              Parcelar (despesa que se repete por vários meses)
+            </label>
+
+            {installmentsOn && (
+              <div className="mt-3 space-y-3">
+                <Field label="Número de parcelas (meses)">
+                  <input
+                    type="number"
+                    min="2"
+                    max="360"
+                    value={installments}
+                    onChange={(e) => setInstallments(e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSplitTotal(false)}
+                    className={`rounded-lg border py-2 text-xs font-medium ${
+                      !splitTotal
+                        ? "border-slate-900 bg-slate-50 dark:border-slate-300 dark:bg-slate-800"
+                        : "border-slate-200 text-slate-500 dark:border-slate-700"
+                    }`}
+                  >
+                    Valor por mês
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSplitTotal(true)}
+                    className={`rounded-lg border py-2 text-xs font-medium ${
+                      splitTotal
+                        ? "border-slate-900 bg-slate-50 dark:border-slate-300 dark:bg-slate-800"
+                        : "border-slate-200 text-slate-500 dark:border-slate-700"
+                    }`}
+                  >
+                    Valor total (dividir)
+                  </button>
+                </div>
+
+                {totalCents > 0 && nParc > 1 && (
+                  <p className="text-xs text-slate-500">
+                    {nParc}x de <strong>{formatBRL(perParcelCents)}</strong>
+                    {splitTotal ? " (aprox.)" : ""} — total{" "}
+                    <strong>{formatBRL(grandTotalCents)}</strong>.
+                    <br />
+                    1ª em {monthLabel(startDate.getMonth() + 1, startDate.getFullYear())}, última em{" "}
+                    {monthLabel(lastDate.getMonth() + 1, lastDate.getFullYear())}.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
