@@ -110,9 +110,8 @@ function BudgetRow({
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-400">R$</span>
           <input
-            type="number"
-            step="0.01"
-            min="0"
+            type="text"
+            inputMode="decimal"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={() => value && onSave(value)}
