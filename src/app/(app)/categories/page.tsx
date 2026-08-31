@@ -36,8 +36,14 @@ export default function CategoriesPage() {
     }
   }
 
+  async function seedDefaults() {
+    await apiSend("/api/categories/defaults", "POST");
+    load();
+  }
+
   const expenses = categories.filter((c) => c.type === "EXPENSE");
   const incomes = categories.filter((c) => c.type === "INCOME");
+  const isEmpty = !loading && categories.length === 0;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -53,6 +59,20 @@ export default function CategoriesPage() {
           + Nova categoria
         </button>
       </div>
+
+      {isEmpty && (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+          <p className="mb-4 text-sm text-slate-500">
+            Você ainda não tem categorias. Comece com um conjunto padrão.
+          </p>
+          <button
+            onClick={seedDefaults}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+          >
+            Criar categorias padrão
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-slate-500">Carregando…</p>

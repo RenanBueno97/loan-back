@@ -32,8 +32,50 @@ npm run db:seed        # popula categorias padrão
 npm run dev            # http://localhost:3000
 ```
 
-Scripts úteis: `npm run build`, `npm run db:studio` (Prisma Studio),
-`npm run db:push` (sincroniza schema sem migração).
+Scripts úteis: `npm run build:app` (build sem migração), `npm run db:studio`
+(Prisma Studio), `npm run db:push` (sincroniza schema sem migração).
+
+## Deploy (Vercel + Neon)
+
+O projeto já está pronto para deploy: o `npm run build` roda
+`prisma migrate deploy` automaticamente, criando as tabelas no primeiro
+publish. Passo a passo (uns ~5 min, tudo em planos gratuitos):
+
+### 1. Banco de dados gratuito (Neon)
+
+1. Crie uma conta em [neon.tech](https://neon.tech) e um projeto Postgres.
+2. Copie a **connection string** (formato
+   `postgresql://user:pass@host/db?sslmode=require`).
+
+> Alternativas: Supabase, Vercel Postgres ou Railway — qualquer Postgres serve.
+
+### 2. Deploy na Vercel
+
+1. Suba este repositório para o GitHub (já está) e, na
+   [vercel.com](https://vercel.com), clique em **Add New → Project** e importe
+   o repositório `loan-back`.
+2. Em **Production Branch**, selecione a branch com o código
+   (`claude/expense-tracking-app-plan-e21e5i`) — ou faça o merge para `main`
+   antes e use `main`.
+3. Em **Environment Variables**, defina:
+
+   | Variável        | Valor                                                      |
+   | --------------- | ---------------------------------------------------------- |
+   | `DATABASE_URL`  | a connection string do Neon                                |
+   | `APP_PASSWORD`  | a senha que você usará para entrar no app                   |
+   | `AUTH_SECRET`   | um segredo longo e aleatório (ex.: `openssl rand -base64 32`) |
+
+4. Clique em **Deploy**. No build, as tabelas são criadas automaticamente.
+
+### 3. Primeiro acesso
+
+1. Abra a URL gerada e entre com a `APP_PASSWORD`.
+2. Vá em **Categorias → Criar categorias padrão** (ou rode `npm run db:seed`
+   localmente apontando para o mesmo banco).
+3. Comece a registrar transações. 🎉
+
+> Dica de segurança: use uma `APP_PASSWORD` forte — é o único obstáculo entre
+> a internet e seus dados.
 
 ## Visão geral rápida
 
