@@ -11,10 +11,10 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
-import { apiGet } from "@/lib/api";
-import { formatBRL } from "@/lib/money";
+import { apiGet, apiSend } from "@/lib/api";
+import { formatBRL, toCents, toReais } from "@/lib/money";
 import { currentMonthYear } from "@/lib/date";
-import type { Summary } from "@/lib/types";
+import type { CashBox, Summary } from "@/lib/types";
 import MonthPicker from "@/components/MonthPicker";
 import Icon, { type IconName } from "@/components/Icon";
 import { Card, CardTitle } from "@/components/ui";
@@ -22,13 +22,26 @@ import { Card, CardTitle } from "@/components/ui";
 export default function DashboardPage() {
   const [{ month, year }, setPeriod] = useState(currentMonthYear());
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [cashCents, setCashCents] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setSummary(await apiGet<Summary>(`/api/summary?month=${month}&year=${year}`));
+    const [s, cb] = await Promise.all([
+      apiGet<Summary>(`/api/summary?month=${month}&year=${year}`),
+      apiGet<CashBox>(`/api/cashbox?month=${month}&year=${year}`),
+    ]);
+    setSummary(s);
+    setCashCents(cb.amountCents);
     setLoading(false);
   }, [month, year]);
+
+  async function saveCash(value: string) {
+    const cents = toCents(value);
+    if (Number.isNaN(cents)) return;
+    await apiSend("/api/cashbox", "PUT", { month, year, amountCents: cents });
+    setCashCents(cents);
+  }
 
   useEffect(() => {
     load();
@@ -56,10 +69,11 @@ export default function DashboardPage() {
         <Skeleton />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Receitas" value={summary.totalIncome} icon="trendUp" tone="income" />
             <StatCard label="Gastos" value={summary.totalExpense} icon="trendDown" tone="expense" />
             <StatCard label="Saldo" value={summary.balance} icon="scale" tone="balance" />
+            <CashBoxCard cents={cashCents} onSave={saveCash} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-5">
@@ -220,6 +234,53 @@ function StatCard({
           {formatBRL(value)}
         </p>
       </div>
+    </Card>
+  );
+}
+
+function CashBoxCard({
+  cents,
+  onSave,
+}: {
+  cents: number;
+  onSave: (value: string) => void;
+}) {
+  const [value, setValue] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setValue(cents ? String(toReais(cents)) : "");
+  }, [cents]);
+
+  return (
+    <Card className="flex items-center gap-4">
+      <span
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+      >
+        <Icon name="wallet" size={20} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs uppercase tracking-wide text-faint">Caixinha</p>
+        <div className="mt-0.5 flex items-baseline gap-1">
+          <span className="text-sm text-faint">R$</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={value}
+            placeholder="0,00"
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            onFocus={() => setEditing(true)}
+            onBlur={() => {
+              setEditing(false);
+              if (value !== (cents ? String(toReais(cents)) : "")) onSave(value);
+            }}
+            className="w-full min-w-0 bg-transparent text-xl font-semibold tabular-nums text-ink outline-none placeholder:text-faint"
+          />
+        </div>
+      </div>
+      {editing && <span className="shrink-0 text-[10px] text-faint">Enter/sair p/ salvar</span>}
     </Card>
   );
 }

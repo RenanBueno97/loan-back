@@ -13,6 +13,7 @@ import { Button, Field, inputClass } from "@/components/ui";
 export default function TransactionsPage() {
   const [{ month, year }, setPeriod] = useState(currentMonthYear());
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
+  const [paidFilter, setPaidFilter] = useState<"" | "open" | "paid">("");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,18 @@ export default function TransactionsPage() {
     { value: "EXPENSE", label: "Gastos" },
     { value: "INCOME", label: "Receitas" },
   ];
+  const paidFilters: { value: "" | "open" | "paid"; label: string }[] = [
+    { value: "", label: "Todas" },
+    { value: "open", label: "Em aberto" },
+    { value: "paid", label: "Pagas" },
+  ];
+
+  const shown = transactions.filter((t) =>
+    paidFilter === "" ? true : paidFilter === "paid" ? t.paid : !t.paid,
+  );
+  const openTotal = transactions
+    .filter((t) => !t.paid)
+    .reduce((s, t) => s + (t.type === "INCOME" ? -t.amountCents : t.amountCents), 0);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -95,20 +108,42 @@ export default function TransactionsPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <MonthPicker month={month} year={year} onChange={(m, y) => setPeriod({ month: m, year: y })} />
-        <div className="flex rounded-xl border border-border bg-surface p-1">
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setTypeFilter(f.value)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                typeFilter === f.value ? "bg-accent-soft text-accent" : "text-muted hover:text-ink"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          <div className="flex rounded-xl border border-border bg-surface p-1">
+            {filters.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setTypeFilter(f.value)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  typeFilter === f.value ? "bg-accent-soft text-accent" : "text-muted hover:text-ink"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex rounded-xl border border-border bg-surface p-1">
+            {paidFilters.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setPaidFilter(f.value)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  paidFilter === f.value ? "bg-accent-soft text-accent" : "text-muted hover:text-ink"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      {openTotal !== 0 && (
+        <p className="-mt-2 text-sm text-muted">
+          Em aberto no mês:{" "}
+          <span className="font-semibold text-expense tabular-nums">{formatBRL(openTotal)}</span>
+        </p>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         {loading ? (
@@ -117,16 +152,20 @@ export default function TransactionsPage() {
               <div key={i} className="h-14 animate-pulse bg-surface-2" />
             ))}
           </div>
-        ) : transactions.length === 0 ? (
+        ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-2 text-faint">
               <Icon name="transactions" size={22} />
             </span>
-            <p className="text-sm text-muted">Nenhuma transação neste período.</p>
+            <p className="text-sm text-muted">
+              {transactions.length === 0
+                ? "Nenhuma transação neste período."
+                : "Nenhuma transação com esse filtro."}
+            </p>
           </div>
         ) : (
           <ul>
-            {transactions.map((t) => (
+            {shown.map((t) => (
               <li
                 key={t.id}
                 className="group flex items-center gap-3 border-b border-border px-4 py-3 last:border-0 hover:bg-surface-2"

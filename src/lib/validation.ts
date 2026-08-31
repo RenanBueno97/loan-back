@@ -37,6 +37,12 @@ export const budgetInput = z.object({
   limitCents: z.coerce.number().int().positive(),
 });
 
+export const cashBoxInput = z.object({
+  month: z.coerce.number().int().min(1).max(12),
+  year: z.coerce.number().int().min(2000).max(3000),
+  amountCents: z.coerce.number().int(),
+});
+
 export type TransactionInput = z.infer<typeof transactionInput>;
 export type CategoryInput = z.infer<typeof categoryInput>;
 export type BudgetInput = z.infer<typeof budgetInput>;

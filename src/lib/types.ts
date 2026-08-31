@@ -25,6 +25,12 @@ export interface Transaction {
   installmentTotal: number | null;
 }
 
+export interface CashBox {
+  month: number;
+  year: number;
+  amountCents: number;
+}
+
 export interface BudgetProgress {
   id: string;
   categoryId: string;
