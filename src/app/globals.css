@@ -1,24 +1,101 @@
 @import "tailwindcss";
 
+/* ---- Design tokens ------------------------------------------------------ */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --bg: #f5f5f2;
+  --surface: #ffffff;
+  --surface-2: #fafaf8;
+  --border: #e8e7e2;
+  --ink: #1a1a1a;
+  --muted: #71717a;
+  --faint: #a1a1aa;
+
+  --accent: #067a5b; /* verde-petróleo, assinatura da marca */
+  --accent-strong: #05654b;
+  --accent-soft: #e3f4ee;
+  --accent-fg: #ffffff;
+
+  --income: #067a5b;
+  --expense: #c2410c; /* terracota, no lugar do vermelho genérico */
+
+  /* Sidebar: escura nos dois temas (escolha de identidade) */
+  --side-bg: #10221c;
+  --side-fg: #b7c4bd;
+  --side-muted: #7d8f87;
+  --side-active-bg: rgba(52, 211, 153, 0.14);
+  --side-active-fg: #6ee7b7;
+  --side-border: rgba(255, 255, 255, 0.07);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
-    --foreground: #e2e8f0;
+    --bg: #0b0d0c;
+    --surface: #151816;
+    --surface-2: #1b1f1c;
+    --border: #262b28;
+    --ink: #f0f1ef;
+    --muted: #9ba39e;
+    --faint: #6b736e;
+
+    --accent: #34d399;
+    --accent-strong: #10b981;
+    --accent-soft: rgba(52, 211, 153, 0.12);
+    --accent-fg: #052e22;
+
+    --income: #34d399;
+    --expense: #fb923c;
+
+    --side-bg: #0c1613;
+    --side-border: rgba(255, 255, 255, 0.06);
   }
 }
 
+/* Expõe os tokens como cores utilitárias do Tailwind (bg-surface, text-ink…) */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---- Base --------------------------------------------------------------- */
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* Foco visível e consistente */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Trilha de scroll discreta */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
